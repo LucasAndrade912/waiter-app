@@ -1,45 +1,69 @@
+import { useState } from 'react'
 import { FlatList } from 'react-native'
 
 import { Text } from '../Text'
+import { Product } from '../../types/Product'
+import { ProductModal } from '../ProductModal'
 import { PlusCircle } from '../Icons/PlusCircle'
-import { products } from '../../mocks/products'
 import { formatCurrency } from '../../utils/formatCurrency'
 
-import { Product, ProductImage, ProductDetails, Separator, AddToCartButton } from './styles'
+import { ProductContainer, ProductImage, ProductDetails, Separator, AddToCartButton } from './styles'
 
-export function Menu() {
+interface MenuProps {
+  products: Product[]
+  onAddToCart: (product: Product) => void
+}
+
+export function Menu({ products, onAddToCart }: MenuProps) {
+  const [isModalVisible, setIsModalVisible] = useState(false)
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
+
+  function handleOpenModal(product: Product) {
+    setIsModalVisible(true)
+    setSelectedProduct(product)
+  }
+
   return (
-    <FlatList
-      data={products}
-      keyExtractor={(product) => product._id}
-      style={{ marginTop: 32 }}
-      contentContainerStyle={{ paddingHorizontal: 24 }}
-      ItemSeparatorComponent={Separator}
-      renderItem={({ item: product }) => (
-        <Product>
-          <ProductImage
-            source={{
-              uri: `http://192.168.1.9:3333/uploads/${product.imagePath}`
-            }}
-          />
+    <>
+      <ProductModal
+        visible={isModalVisible}
+        onClose={() => setIsModalVisible(false)}
+        product={selectedProduct}
+        onAddToCart={onAddToCart}
+      />
 
-          <ProductDetails>
-            <Text weight="600">{product.name}</Text>
+      <FlatList
+        data={products}
+        keyExtractor={(product) => product._id}
+        style={{ marginTop: 32 }}
+        contentContainerStyle={{ paddingHorizontal: 24 }}
+        ItemSeparatorComponent={Separator}
+        renderItem={({ item: product }) => (
+          <ProductContainer onPress={() => handleOpenModal(product)}>
+            <ProductImage
+              source={{
+                uri: `http://192.168.1.9:3333/uploads/${product.imagePath}`
+              }}
+            />
 
-            <Text color="#666" size={14} style={{ marginVertical: 8 }}>
-              {product.description}
-            </Text>
+            <ProductDetails>
+              <Text weight="600">{product.name}</Text>
 
-            <Text size={14} weight="600">
-              {formatCurrency(product.price)}
-            </Text>
-          </ProductDetails>
+              <Text color="#666" size={14} style={{ marginVertical: 8 }}>
+                {product.description}
+              </Text>
 
-          <AddToCartButton>
-            <PlusCircle />
-          </AddToCartButton>
-        </Product>
-      )}
-    />
+              <Text size={14} weight="600">
+                {formatCurrency(product.price)}
+              </Text>
+            </ProductDetails>
+
+            <AddToCartButton onPress={() => onAddToCart(product)}>
+              <PlusCircle />
+            </AddToCartButton>
+          </ProductContainer>
+        )}
+      />
+    </>
   )
 }
